@@ -4,7 +4,7 @@
    key) posthog.init's own stub queue means calls never throw;
    we additionally wrap init itself in try/catch so a malformed
    snippet can never break page load.
-   Replace phc_vQWFVZTUAUPkGAeUD9tWSwfmkYWVmaWyohFnn64GQFqd and the api_host below before deploying.
+   Replace YOUR_POSTHOG_KEY and the api_host below before deploying.
    ============================================================ */
 try {
   !function (t, e) {
@@ -24,7 +24,7 @@ try {
     }, e.__SV = 1)
   }(document, window.posthog || []);
 
-  posthog.init('phc_vQWFVZTUAUPkGAeUD9tWSwfmkYWVmaWyohFnn64GQFqd', { api_host: 'https://us.i.posthog.com', capture_pageview: true, autocapture: false });
+  posthog.init('phc_vQWFVZTUAUPkGAeUD9tWSwfmkYWVmaWyohFnn64GQFqd', { api_host: 'https://us.i.posthog.com', capture_pageview: true, autocapture: false, disable_session_recording: false });
 } catch (err) {
   window.posthog = window.posthog || { capture: function () {} };
 }
