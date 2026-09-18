@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV — Ethan Zanger, Marketing & Media Strategist</title>
+<meta name="description" content="View or download Ethan Zanger's CV — a decade of media strategy and retail media experience across global and challenger brands.">
+<link rel="canonical" href="https://ethanzanger.com/cv">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a href="index.html" class="wordmark">Ethan Zanger</a>
+    <nav class="site-nav" aria-label="Primary">
+      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-list">Menu</button>
+      <ul id="nav-list">
+        <li><a href="index.html#work">Selected Work</a></li>
+        <li><a href="index.html#experience">Experience</a></li>
+        <li><a href="index.html#about">About</a></li>
+        <li><a href="index.html#contact" class="nav-cta">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="section cv-viewer-section">
+    <div class="wrap">
+      <h1>Curriculum Vitae</h1>
+      <p class="hero-sub">The résumé behind the highlights on this site — a decade of media strategy and retail media experience, based in Jerusalem, Israel.</p>
+
+      <div class="cv-actions">
+        <a class="btn btn-primary" id="cv-download-btn" href="assets/ethan-zanger-resume.pdf" download>Download PDF</a>
+        <a class="btn btn-ghost" id="cv-linkedin-btn" href="https://www.linkedin.com/in/ethanzanger/" target="_blank" rel="noopener">View LinkedIn</a>
+        <a class="btn btn-ghost" id="cv-contact-btn" href="index.html#contact">Get in touch</a>
+      </div>
+
+      <div class="cv-frame-wrap">
+        <iframe src="assets/ethan-zanger-resume.pdf" title="Ethan Zanger CV">
+          Your browser can't display embedded PDFs. <a href="assets/ethan-zanger-resume.pdf">Download the CV directly</a>.
+        </iframe>
+      </div>
+      <p class="cv-fallback-note">Viewing on mobile? Some browsers download the file automatically instead of previewing it inline — use Download PDF above either way.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>Ethan Zanger · Jerusalem, Israel</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+<script>
+(function () {
+  /* ============================================================
+     CV viewer tracking.
+     Reuses track(), acquisition, and readUTMFromURL() from
+     script.js — no duplicate PostHog init, no duplicate
+     attribution logic.
+
+     entry_point tells us which button on the main site sent
+     someone here (hero vs. contact); cv_link_utm_* captures the
+     UTM values on THIS specific page load, independent of the
+     visitor's original first-touch source — this is what makes
+     a per-campaign link like
+     cv.html?utm_source=linkedin&utm_medium=dm&utm_campaign=appsflyer
+     usable on its own, e.g. sent directly to one recruiter,
+     without depending on how they first found the main site.
+     ============================================================ */
+  var cvLinkUTM = (typeof readUTMFromURL === 'function') ? (readUTMFromURL() || {}) : {};
+  var params = new URLSearchParams(window.location.search);
+  var entryPoint = params.get('src') || 'direct';
+
+  track('cv_viewed', {
+    entry_point: entryPoint,
+    cv_link_utm_source: cvLinkUTM.utm_source,
+    cv_link_utm_medium: cvLinkUTM.utm_medium,
+    cv_link_utm_campaign: cvLinkUTM.utm_campaign
+  });
+
+  /* Approximate, bucketed time-on-page — not a claim that the
+     CV was read or understood, just how long the tab was open
+     before the visitor left or downloaded. Fires once. */
+  var viewStart = Date.now();
+  var durationSent = false;
+  function sendDuration() {
+    if (durationSent) return;
+    durationSent = true;
+    var seconds = Math.round((Date.now() - viewStart) / 1000);
+    var bucket = seconds < 10 ? '0-10s' : seconds < 30 ? '10-30s' : seconds < 60 ? '30-60s' : '60s+';
+    track('cv_viewer_time_spent', { bucket: bucket, entry_point: entryPoint });
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') sendDuration();
+  });
+  window.addEventListener('pagehide', sendDuration);
+
+  var dl = document.getElementById('cv-download-btn');
+  if (dl) dl.addEventListener('click', function () {
+    track('cv_downloaded', { entry_point: entryPoint });
+  });
+
+  var li = document.getElementById('cv-linkedin-btn');
+  if (li) li.addEventListener('click', function () {
+    track('cv_linkedin_clicked', { entry_point: entryPoint });
+  });
+
+  var ct = document.getElementById('cv-contact-btn');
+  if (ct) ct.addEventListener('click', function () {
+    track('cv_contact_clicked', { entry_point: entryPoint });
+  });
+})();
+</script>
+</body>
+</html>
