@@ -24,7 +24,7 @@ try {
     }, e.__SV = 1)
   }(document, window.posthog || []);
 
-  posthog.init('phc_vQWFVZTUAUPkGAeUD9tWSwfmkYWVmaWyohFnn64GQFqd', { api_host: 'https://us.i.posthog.com', capture_pageview: true, autocapture: false, disable_session_recording: false });
+  posthog.init('phc_vQWFVZTUAUPkGAeUD9tWSwfmkYWVmaWyohFnn64GQFqd', { api_host: 'https://us.i.posthog.com', capture_pageview: true, autocapture: true, disable_session_recording: false, capture_pageleave: true });
 } catch (err) {
   window.posthog = window.posthog || { capture: function () {} };
 }
@@ -130,15 +130,11 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   /* ----------------------------------------------------------
-     CTA click tracking.
-     CV_Download_Clicked measures click intent, not a completed
-     file save — no client-side API can confirm the browser
-     actually wrote the file to disk, so we never claim more
-     than "clicked."
+     CTA click tracking (LinkedIn/email/schedule links on the
+     main site). CV tracking (cv_viewed, cv_downloaded, etc.)
+     lives on cv.html now — see that file for the CV funnel.
      ---------------------------------------------------------- */
   var bindings = [
-    ['#cta-download-cv', 'CV_Download_Clicked', { location: 'hero' }],
-    ['#cta-download-cv-2', 'CV_Download_Clicked', { location: 'contact' }],
     ['#cta-linkedin', 'LinkedIn_Clicked', {}],
     ['#cta-email', 'Email_Clicked', {}],
     ['#cta-schedule', 'Schedule_Interview_Clicked', {}]
@@ -227,6 +223,14 @@ document.addEventListener('DOMContentLoaded', function () {
       }).then(function (res) {
         if (res.ok) {
           status.textContent = "Thanks — I'll be in touch soon.";
+          try {
+            var emailVal = form.querySelector('#email') ? form.querySelector('#email').value : undefined;
+            var nameVal = form.querySelector('#name') ? form.querySelector('#name').value : undefined;
+            var companyVal = form.querySelector('#company') ? form.querySelector('#company').value : undefined;
+            if (window.posthog && emailVal && typeof posthog.identify === 'function') {
+              posthog.identify(emailVal, { name: nameVal, company: companyVal, email: emailVal });
+            }
+          } catch (idErr) { /* identification is a bonus, never block the form on it */ }
           track('Contact_Form_Submitted', {});
           form.reset();
         } else {
