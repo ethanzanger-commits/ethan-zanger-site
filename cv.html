@@ -38,14 +38,14 @@
       <p class="hero-sub">The résumé behind the highlights on this site — a decade of media strategy and retail media experience, based in Jerusalem, Israel.</p>
 
       <div class="cv-actions">
-        <a class="btn btn-primary" id="cv-download-btn" href="assets/ethan-zanger-resume.pdf" download>Download PDF</a>
+        <a class="btn btn-primary" id="cv-download-btn" href="ethan-zanger-resume.pdf" download>Download PDF</a>
         <a class="btn btn-ghost" id="cv-linkedin-btn" href="https://www.linkedin.com/in/ethanzanger/" target="_blank" rel="noopener">View LinkedIn</a>
         <a class="btn btn-ghost" id="cv-contact-btn" href="index.html#contact">Get in touch</a>
       </div>
 
       <div class="cv-frame-wrap">
-        <iframe src="assets/ethan-zanger-resume.pdf" title="Ethan Zanger CV">
-          Your browser can't display embedded PDFs. <a href="assets/ethan-zanger-resume.pdf">Download the CV directly</a>.
+        <iframe src="ethan-zanger-resume.pdf" title="Ethan Zanger CV">
+          Your browser can't display embedded PDFs. <a href="ethan-zanger-resume.pdf">Download the CV directly</a>.
         </iframe>
       </div>
       <p class="cv-fallback-note">Viewing on mobile? Some browsers download the file automatically instead of previewing it inline — use Download PDF above either way.</p>
@@ -63,61 +63,53 @@
 <script>
 (function () {
   /* ============================================================
-     CV viewer tracking.
-     Reuses track(), acquisition, and readUTMFromURL() from
-     script.js — no duplicate PostHog init, no duplicate
-     attribution logic.
+     CV viewer tracking — reuses track(), firstTouch, lastTouch,
+     and readUTMFromURL() from script.js. No duplicate PostHog
+     init, no duplicate attribution logic.
 
-     entry_point tells us which button on the main site sent
-     someone here (hero vs. contact); cv_link_utm_* captures the
-     UTM values on THIS specific page load, independent of the
-     visitor's original first-touch source — this is what makes
-     a per-campaign link like
-     cv.html?utm_source=linkedin&utm_medium=dm&utm_campaign=appsflyer
-     usable on its own, e.g. sent directly to one recruiter,
-     without depending on how they first found the main site.
+     cv_opened fires immediately (this page loading IS "opened").
+     cv_30s / cv_60s only fire if the tab is still visible and
+     focused at that wall-clock mark — both timers are cleared on
+     pagehide/hidden so a backgrounded tab never counts as
+     30/60 seconds of engagement.
      ============================================================ */
-  var cvLinkUTM = (typeof readUTMFromURL === 'function') ? (readUTMFromURL() || {}) : {};
   var params = new URLSearchParams(window.location.search);
   var entryPoint = params.get('src') || 'direct';
 
-  track('cv_viewed', {
+  track('cv_opened', {
     entry_point: entryPoint,
-    cv_link_utm_source: cvLinkUTM.utm_source,
-    cv_link_utm_medium: cvLinkUTM.utm_medium,
-    cv_link_utm_campaign: cvLinkUTM.utm_campaign
+    cv_link_utm_source: lastTouch.utm_source,
+    cv_link_utm_medium: lastTouch.utm_medium,
+    cv_link_utm_campaign: lastTouch.utm_campaign
   });
+  markEngagedSession('cv_opened');
 
-  /* Approximate, bucketed time-on-page — not a claim that the
-     CV was read or understood, just how long the tab was open
-     before the visitor left or downloaded. Fires once. */
-  var viewStart = Date.now();
-  var durationSent = false;
-  function sendDuration() {
-    if (durationSent) return;
-    durationSent = true;
-    var seconds = Math.round((Date.now() - viewStart) / 1000);
-    var bucket = seconds < 10 ? '0-10s' : seconds < 30 ? '10-30s' : seconds < 60 ? '30-60s' : '60s+';
-    track('cv_viewer_time_spent', { bucket: bucket, entry_point: entryPoint });
-  }
+  var t30 = setTimeout(function () {
+    if (document.visibilityState === 'visible') track('cv_30s', { entry_point: entryPoint });
+  }, 30000);
+  var t60 = setTimeout(function () {
+    if (document.visibilityState === 'visible') track('cv_60s', { entry_point: entryPoint });
+  }, 60000);
+  function clearCvTimers() { clearTimeout(t30); clearTimeout(t60); }
   document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'hidden') sendDuration();
+    if (document.visibilityState === 'hidden') clearCvTimers();
   });
-  window.addEventListener('pagehide', sendDuration);
+  window.addEventListener('pagehide', clearCvTimers);
 
   var dl = document.getElementById('cv-download-btn');
   if (dl) dl.addEventListener('click', function () {
     track('cv_downloaded', { entry_point: entryPoint });
+    markEngagedSession('cv_downloaded');
   });
 
   var li = document.getElementById('cv-linkedin-btn');
   if (li) li.addEventListener('click', function () {
-    track('cv_linkedin_clicked', { entry_point: entryPoint });
+    track('linkedin_clicked', { source: 'cv_page', entry_point: entryPoint });
   });
 
   var ct = document.getElementById('cv-contact-btn');
   if (ct) ct.addEventListener('click', function () {
-    track('cv_contact_clicked', { entry_point: entryPoint });
+    track('nav_click', { destination: 'contact', source: 'cv_page' });
   });
 })();
 </script>
