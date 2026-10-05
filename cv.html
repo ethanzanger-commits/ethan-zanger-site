@@ -38,7 +38,7 @@
       <p class="hero-sub">The résumé behind the highlights on this site — a decade of media strategy and retail media experience, based in Jerusalem, Israel.</p>
 
       <div class="cv-actions">
-        <a class="btn btn-primary" id="cv-download-btn" href="ethan-zanger-resume.pdf" download>Download PDF</a>
+        <a class="btn btn-primary" id="cv-download-btn" href="ethan-zanger-resume.pdf" download data-cta-type="cv" data-cta-location="cv_viewer">Download PDF</a>
         <a class="btn btn-ghost" id="cv-linkedin-btn" href="https://www.linkedin.com/in/ethanzanger/" target="_blank" rel="noopener">View LinkedIn</a>
         <a class="btn btn-ghost" id="cv-contact-btn" href="index.html#contact">Get in touch</a>
       </div>
@@ -98,6 +98,7 @@
 
   var dl = document.getElementById('cv-download-btn');
   if (dl) dl.addEventListener('click', function () {
+    track('cta_clicked', { cta_type: 'cv', cta_location: 'cv_viewer', cta_text: 'Download PDF', page: window.location.pathname });
     track('cv_downloaded', { entry_point: entryPoint });
     markEngagedSession('cv_downloaded');
   });
