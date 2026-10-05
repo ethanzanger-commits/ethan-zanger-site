@@ -1,0 +1,56 @@
+# Analytics model
+
+One line each: what an event means, when it fires, what it answers. If you're reading this six months from now, this page is the source of truth.
+
+## Why this exists
+The previous instrumentation fired `Case_Study_Viewed` the moment any part of a card crossed 50% visibility. Because all four case cards sit close together on the page, scrolling past the section crossed all four thresholds within the same second — that looked like "engagement" in PostHog but was really just "scrolled past." This version replaces single-threshold visibility with layered, genuinely distinct signals (see Case studies below), so the numbers mean what they say.
+
+## UTM normalization
+All UTM values are lowercased and trimmed before use — "Slack" and "slack" now collapse into one value instead of splitting source breakdowns. This only fixes things going forward; it can't merge what's already in PostHog from before this fix.
+
+## Attribution: first-touch vs. last-touch
+Every event carries both, never merged:
+- `first_touch_utm_*` / `first_touch_referrer` / `first_touch_landing_page` — captured once, the first time this browser ever visited, persisted in `localStorage` indefinitely. Answers *"how did this person originally find me."*
+- `last_touch_utm_*` / `last_touch_referrer` — read fresh from the URL on every page load, never persisted. Answers *"what link got them to THIS specific page."* This is what makes a one-off link like `/cv?utm_campaign=appsflyer` measurable on its own, even for someone who first found the site a week earlier through something else.
+
+## Events
+
+| Event | Fires when | Purpose |
+|---|---|---|
+| `landing_page_view` | Every page load (index or cv) | Acquisition — the funnel's top of funnel, distinct from PostHog's automatic `$pageview` |
+| `nav_click` | Any link tagged `data-nav-destination` | Navigation intent — property `destination` (work/experience/about/contact/cv_viewer), `source` (which specific button/link) |
+| `case_study_opened` | A case card becomes 10%+ visible | Content interest — the card was seen at all |
+| `case_study_50pct` | A case card reaches 50% visible | Meaningful visibility, not just a glance |
+| `case_study_90pct` | A case card reaches 90% visible | Nearly the full card was in view |
+| `case_study_engaged_15s` | 25%+ of a case card visible for a cumulative 15s (pauses when below 25% or tab unfocused) | Real reading time, not scroll-past — the actual "did they engage" signal |
+| `experience_section_viewed` / `capabilities_section_viewed` / `about_section_viewed` | Section reaches 20% visible (threshold lowered from 50% — a tall section like Experience rarely gets half inside the viewport at once, which was silently undercounting it) | Mid-page engagement depth |
+| `contact_viewed` | Contact section reaches 20% visible | Reached the bottom of the funnel |
+| `cv_opened` | `cv.html` loads | Candidate evaluation begins — property `entry_point` (hero/contact/case_study/direct) |
+| `cv_30s` / `cv_60s` | 30s / 60s of visible, focused time on the CV page | Depth of CV review — never fires from a backgrounded tab |
+| `cv_downloaded` | Download PDF clicked | High intent |
+| `email_clicked` / `linkedin_clicked` / `calendly_clicked` | Respective CTA clicked (LinkedIn tracked on both the main site and the CV page, with a `source` property distinguishing them) | Conversion intent |
+| `cta_clicked` | Any CV or contact CTA click, fired ALONGSIDE the specific outcome event it leads to (never instead of it) | Properties: `cta_type` (cv/contact/linkedin/email), `cta_location` (hero/case_study_cta/contact_section/cv_viewer/contact_form/header_nav), `cta_text`, `page`. This is what separates "CTA was clicked" from "the thing it promised actually happened" — build the funnel as `cta_clicked` (filtered by `cta_type`) → the matching outcome event (`cv_downloaded` / `contact_form_submitted`) |
+| `contact_form_started` | First field focused (fires once) | Early intent signal before a full submission |
+| `contact_form_submitted` | Confirmed 2xx from Formspree | The actual action taken |
+| `qualified_contact` | Same trigger as `contact_form_submitted` — the only real "conversation started" signal this site can detect | Business outcome. Never fires on merely opening the Contact section. |
+| `engaged_session` | First time ANY of: 30s of active visible/focused time, a case study reaching 50%, `cv_opened`, `cv_downloaded`, or any Contact/LinkedIn/Calendly click | One clean "was this a real visit" flag per session — also set as a PostHog session super-property (`engaged_session: true`) so you can filter any other report by it |
+
+## Conversion funnel
+```
+Acquisition     landing_page_view (with first/last-touch UTM)
+      ↓
+Engagement      case_study_opened → case_study_50pct → case_study_engaged_15s
+      ↓
+Evaluation      cv_opened → cv_30s/cv_60s → cv_downloaded
+      ↓
+Intent          contact_viewed → email/linkedin/calendly_clicked → contact_form_started
+      ↓
+Conversion      contact_form_submitted / qualified_contact
+```
+Build this as a PostHog Funnel insight with those events as steps, breakdown by `last_touch_utm_source` to see which channel actually converts, not just which one gets clicks.
+
+## Experiment-ready, not experiment-built
+Any link with `?variant=b` gets that value registered as a PostHog session property (`experiment_variant`) automatically — no extra code needed. To test something later (hero headline, CTA wording, case-study order), make a second version of the page, link to it with `?variant=b`, and breakdown any funnel by `experiment_variant`. No full A/B testing system was built, since the current traffic volume doesn't yet justify one.
+
+## What NOT to do with a small sample
+Don't declare a case study "the best" from a handful of events. Let the funnel run for a few weeks post-fix before drawing conclusions — the point of this rebuild was to make the *next* batch of data trustworthy, not to re-interpret the old one.
