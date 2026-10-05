@@ -57,10 +57,10 @@
     <nav class="site-nav" aria-label="Primary">
       <button class="nav-toggle" aria-expanded="false" aria-controls="nav-list">Menu</button>
       <ul id="nav-list">
-        <li><a href="#work">Selected Work</a></li>
-        <li><a href="#experience">Experience</a></li>
-        <li><a href="#about">About</a></li>
-        <li><a href="#contact" class="nav-cta">Contact</a></li>
+        <li><a href="#work" data-nav-destination="work" data-nav-source="header_nav">Selected Work</a></li>
+        <li><a href="#experience" data-nav-destination="experience" data-nav-source="header_nav">Experience</a></li>
+        <li><a href="#about" data-nav-destination="about" data-nav-source="header_nav">About</a></li>
+        <li><a href="#contact" class="nav-cta" data-nav-destination="contact" data-cta-type="contact" data-nav-source="header_nav">Contact</a></li>
       </ul>
     </nav>
   </div>
@@ -76,9 +76,10 @@
         <h1>Marketing &amp; Media Strategist<span class="hero-rule">Turning Multi-Channel Media Investment Into Business Growth</span></h1>
         <p class="hero-sub">A decade managing media portfolios, retail Search programs, and cross-channel campaigns for global and challenger brands — now applying that experience in Israeli tech.</p>
         <div class="hero-actions">
-          <a class="btn btn-primary" id="cta-view-cv" href="cv.html?src=hero">View CV</a>
-          <a class="btn btn-ghost" id="cta-lets-talk" href="#contact">Let's Talk</a>
+          <a class="btn btn-primary" href="#work" data-nav-destination="work" data-nav-source="hero_primary_cta">View My Work</a>
+          <a class="btn btn-ghost" href="cv.html?src=hero" data-nav-destination="cv_viewer" data-cta-type="cv" data-nav-source="hero_secondary_cta">Download CV</a>
         </div>
+        <p class="hero-tertiary"><a href="#contact" data-nav-destination="contact" data-cta-type="contact" data-nav-source="hero_tertiary">or get in touch directly →</a></p>
       </div>
       <div class="hero-meta" aria-hidden="false">
         <span class="dateline">Jerusalem, Israel</span>
@@ -119,9 +120,18 @@
           <h3>Retail Search, at national scale</h3>
           <dl class="case-facts">
             <div><dt>Challenge</dt><dd>Grow retail Search performance across major retailers for a seasonal CPG program, balancing branded defense, category expansion, and conquesting.</dd></div>
-            <div><dt>Approach</dt><dd>Directed six-figure retail media Search programs, including $180K+ of incremental seasonal investment, with weekly pacing and optimization against delivery benchmarks.</dd></div>
-            <div><dt>Result</dt><dd><strong>$3M+</strong> in attributed revenue at <strong>30–40x ROAS</strong>, sustaining <strong>25–40% New-to-Brand</strong>.</dd></div>
+            <div><dt>Result</dt><dd><strong>$3M+</strong> attributed revenue at <strong>30–40x ROAS</strong>, sustaining <strong>25–40% New-to-Brand</strong>, with 100% of 119 branded keywords defended at the top position.</dd></div>
           </dl>
+          <details class="case-expand">
+            <summary>See the full story</summary>
+            <dl class="case-facts">
+              <div><dt>My Role</dt><dd>Owned retail media Search strategy and monthly budget reconciliation for the Fairlife account.</dd></div>
+              <div><dt>The Move</dt><dd>Directed six-figure Search programs including $180K+ of incremental seasonal investment, ran weekly pacing and optimization against benchmarks, and caught an $11K reporting discrepancy between Amazon and Pacvue before it reached the client.</dd></div>
+              <div><dt>Why It Mattered</dt><dd>Brand-term visibility protects category share against zero competitors currently holding Fairlife's branded top spot — losing that position means paying to win back demand already earned.</dd></div>
+              <div><dt>What I Learned</dt><dd>Catching a reporting discrepancy before a client review builds more long-term trust than any single optimization win.</dd></div>
+            </dl>
+          </details>
+          <p class="case-cta">Want to see the full picture? <a href="cv.html?src=case_study" data-nav-destination="cv_viewer" data-cta-type="cv" data-nav-source="case_study_cta">View CV</a> · <a href="#contact" data-nav-destination="contact" data-cta-type="contact" data-nav-source="case_study_cta">Let's talk</a></p>
         </article>
 
         <article class="case-card case-featured" data-case="corepower">
@@ -129,9 +139,18 @@
           <h3>A Prime Day budget, reallocated on the fly</h3>
           <dl class="case-facts">
             <div><dt>Challenge</dt><dd>Maximize return on a fixed Amazon Prime Day budget across Sponsored Products, Sponsored Brands, and Video.</dd></div>
-            <div><dt>Approach</dt><dd>Ran daily optimization across all three placement types, identified Top of Search as the highest-performing segment, and built a budget reallocation strategy around it.</dd></div>
-            <div><dt>Result</dt><dd><strong>$971K+</strong> attributed revenue on a $336K spend at <strong>2.89 ROAS</strong>, <strong>55% New-to-Brand</strong>, plus a <strong>$97K+ projected</strong> incremental lift from the reallocation plan.</dd></div>
+            <div><dt>Result</dt><dd><strong>$971K+</strong> attributed revenue on a $336K spend at <strong>2.89 ROAS</strong>, <strong>55% New-to-Brand</strong>, plus a <strong>$97K+ projected</strong> incremental lift from the reallocation.</dd></div>
           </dl>
+          <details class="case-expand">
+            <summary>See the full story</summary>
+            <dl class="case-facts">
+              <div><dt>My Role</dt><dd>Owned daily optimization across all three placement types for the CorePower account.</dd></div>
+              <div><dt>The Move</dt><dd>Ran daily bid and placement optimization through the event, identified Top of Search as the highest-performing segment, and built a budget reallocation plan around it mid-flight.</dd></div>
+              <div><dt>Why It Mattered</dt><dd>Prime Day is a fixed, unrepeatable window — reallocating based on real-time signal instead of the original plan is what turned a good result into a record one.</dd></div>
+              <div><dt>What I Learned</dt><dd>The highest-performing placement isn't always the one with the biggest starting budget — worth checking daily, not just in the post-mortem.</dd></div>
+            </dl>
+          </details>
+          <p class="case-cta">Want to see the full picture? <a href="cv.html?src=case_study" data-nav-destination="cv_viewer" data-cta-type="cv" data-nav-source="case_study_cta">View CV</a> · <a href="#contact" data-nav-destination="contact" data-cta-type="contact" data-nav-source="case_study_cta">Let's talk</a></p>
         </article>
       </div>
 
@@ -140,12 +159,14 @@
           <p class="case-eyebrow">Spark Foundry (Publicis Groupe) — Aflac</p>
           <h3>Cross-channel campaign, outperforming plan</h3>
           <p class="case-compact-body">Directed an 8-creator TikTok influencer program plus 4 Twitch livestream broadcasts and podcast audio placements for Aflac's college football sponsorship. Delivered <strong>59.4M</strong> impressions and <strong>32M</strong> video views — above the 42.2M planned — with a <strong>54.13%</strong> video completion rate against a 43% benchmark, and <strong>9.3M</strong> minutes watched across the Twitch broadcasts.</p>
+          <p class="case-cta">Want to see the full picture? <a href="cv.html?src=case_study" data-nav-destination="cv_viewer" data-cta-type="cv" data-nav-source="case_study_cta">View CV</a> · <a href="#contact" data-nav-destination="contact" data-cta-type="contact" data-nav-source="case_study_cta">Let's talk</a></p>
         </article>
 
         <article class="case-card case-compact" data-case="hello-products">
           <p class="case-eyebrow">VaynerMedia / The Sasha Group — Hello Products</p>
           <h3>Full-stack channel execution</h3>
           <p class="case-compact-body">Self-managed campaigns across <strong>8 channels</strong> — Meta, The Trade Desk, TikTok, Walmart Connect, Amazon DSP, Snap, YouTube, Google Search — plus direct insertion orders with iHeart, Pinterest, and Dotdash Meredith.</p>
+          <p class="case-cta">Want to see the full picture? <a href="cv.html?src=case_study" data-nav-destination="cv_viewer" data-cta-type="cv" data-nav-source="case_study_cta">View CV</a> · <a href="#contact" data-nav-destination="contact" data-cta-type="contact" data-nav-source="case_study_cta">Let's talk</a></p>
         </article>
       </div>
     </div>
@@ -303,7 +324,7 @@
           <li><a id="cta-email" href="mailto:EthanZanger@gmail.com">EthanZanger@gmail.com</a></li>
           <li><a id="cta-linkedin" href="https://www.linkedin.com/in/INSERT-LINKEDIN-HANDLE" target="_blank" rel="noopener">LinkedIn</a></li>
           <li><a id="cta-schedule" href="https://calendly.com/INSERT-YOUR-HANDLE" target="_blank" rel="noopener">Schedule a call</a></li>
-          <li><a id="cta-view-cv-2" href="cv.html?src=contact">View CV</a></li>
+          <li><a id="cta-view-cv-2" href="cv.html?src=contact" data-nav-destination="cv_viewer" data-cta-type="cv" data-nav-source="contact_section">View CV</a></li>
         </ul>
       </div>
       <form id="contact-form" class="contact-form" action="https://formspree.io/f/INSERT-FORM-ID" method="POST">
