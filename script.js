@@ -157,7 +157,12 @@ function markEngagedSession(reason) {
 /* One landing_page_view per page load — distinct from PostHog's
    automatic $pageview, this is the acquisition-model event the
    funnel is built on. */
-track('landing_page_view', {});
+track('landing_page_view', {
+  browser_language: navigator.language || undefined,
+  timezone: (function () {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (e) { return undefined; }
+  })()
+});
 
 document.addEventListener('DOMContentLoaded', function () {
 
