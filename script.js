@@ -19,7 +19,7 @@ try {
     }, e.__SV = 1)
   }(document, window.posthog || []);
 
-  posthog.init('phc_vQWFVZTUAUPkGAeUD9tWSwfmkYWVmaWyohFnn64GQFqd', { api_host: 'https://us.i.posthog.com', capture_pageview: true, autocapture: true, disable_session_recording: false, capture_pageleave: true });
+  posthog.init('phc_vQWFVZTUAUPkGAeUD9tWSwfmkYWVmaWyohFnn64GQFqd', { api_host: 'https://us.i.posthog.com', capture_pageview: true, autocapture: false, disable_session_recording: false, capture_pageleave: true });
 } catch (err) {
   window.posthog = window.posthog || { capture: function () {} };
 }
