@@ -79,6 +79,65 @@ var firstTouch = getFirstTouch();
 var lastTouch = readUTMFromURL() || {};
 var lastTouchReferrer = document.referrer || '(direct)';
 
+/* ============================================================
+   HIRING INTENT SCORE — live, not just documented.
+   Persists in localStorage across visits (a recruiter who comes
+   back next week keeps their accumulated score) and is written
+   to the PostHog Persons table as it changes, so you can sort
+   Persons by hiring_intent_score directly instead of calculating
+   it by hand from raw events. Weights per ANALYTICS.md.
+
+   high_intent_reached fires once, the first time a visitor
+   crosses the threshold — tag a PostHog alert/webhook on this
+   single event instead of every CV click individually.
+   ============================================================ */
+var SCORE_KEY = 'ez_intent_score_v1';
+var HIGH_INTENT_THRESHOLD = 20;
+var intentScore = 0;
+var highIntentFired = false;
+(function () {
+  try {
+    var stored = parseInt(localStorage.getItem(SCORE_KEY), 10);
+    if (!isNaN(stored)) intentScore = stored;
+  } catch (e) {}
+})();
+
+var INTENT_WEIGHTS = {
+  landing_page_view: 1,
+  case_study_opened: 3,
+  case_study_engaged_15s: 4,
+  cv_opened: 5,
+  cv_30s: 3,
+  cv_60s: 3,
+  cv_downloaded: 10,
+  contact_viewed: 3,
+  contact_form_started: 6,
+  contact_form_submitted: 15,
+  linkedin_clicked: 2
+};
+
+function addIntentScore(eventName) {
+  var points = INTENT_WEIGHTS[eventName];
+  if (!points) return;
+  intentScore += points;
+  try { localStorage.setItem(SCORE_KEY, String(intentScore)); } catch (e) {}
+  try {
+    if (window.posthog && typeof posthog.setPersonProperties === 'function') {
+      posthog.setPersonProperties({ hiring_intent_score: intentScore });
+    } else if (window.posthog && posthog.people && typeof posthog.people.set === 'function') {
+      posthog.people.set({ hiring_intent_score: intentScore });
+    }
+  } catch (e) {}
+  if (!highIntentFired && intentScore >= HIGH_INTENT_THRESHOLD) {
+    highIntentFired = true;
+    track('high_intent_reached', { score: intentScore });
+  }
+}
+/* Returning visitor gets its one-time bonus immediately, since
+   it's known at page load rather than from a later event. */
+INTENT_WEIGHTS.__return_visit__ = 6;
+if (isReturningVisitor) addIntentScore('__return_visit__');
+
 /* Optional experiment tag — pass ?variant=b on any link. Persisted
    as a super-property for the session so every event downstream
    carries it, without building a full A/B testing system. */
@@ -96,6 +155,7 @@ var lastTouchReferrer = document.referrer || '(direct)';
    attribution sets plus the current path.
    ============================================================ */
 function track(name, props) {
+  addIntentScore(name);
   try {
     if (window.posthog && typeof posthog.capture === 'function') {
       posthog.capture(name, Object.assign(
