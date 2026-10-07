@@ -53,12 +53,14 @@ function readUTMFromURL() {
   return found ? out : null;
 }
 
+var isReturningVisitor = false;
 function getFirstTouch() {
   try {
     var fromUrl = readUTMFromURL();
     var stored = null;
     try { stored = JSON.parse(localStorage.getItem(ACQ_KEY)); } catch (e) { stored = null; }
     if (!stored) {
+      isReturningVisitor = false;
       var acquisition = fromUrl || {};
       acquisition.referrer = document.referrer || '(direct)';
       acquisition.landing_page = window.location.pathname;
@@ -66,6 +68,7 @@ function getFirstTouch() {
       try { localStorage.setItem(ACQ_KEY, JSON.stringify(acquisition)); } catch (e) {}
       return acquisition;
     }
+    isReturningVisitor = true;
     return stored;
   } catch (err) {
     return {};
@@ -110,7 +113,8 @@ function track(name, props) {
           last_touch_utm_content: lastTouch.utm_content,
           last_touch_utm_term: lastTouch.utm_term,
           last_touch_referrer: lastTouchReferrer,
-          page_path: window.location.pathname
+          page_path: window.location.pathname,
+          is_returning_visitor: isReturningVisitor
         },
         props || {}
       ));
