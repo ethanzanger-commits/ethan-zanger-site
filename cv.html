@@ -49,6 +49,8 @@
         </iframe>
       </div>
       <p class="cv-fallback-note">Viewing on mobile? Some browsers download the file automatically instead of previewing it inline — use Download PDF above either way.</p>
+
+      <p class="cv-nudge" id="cv-nudge" hidden>Still reading? <a href="index.html#contact" id="cv-nudge-link" data-nav-destination="contact" data-cta-type="contact" data-nav-source="cv_viewer_prompt">Questions? Let's talk →</a></p>
     </div>
   </section>
 </main>
@@ -88,7 +90,11 @@
     if (document.visibilityState === 'visible') track('cv_30s', { entry_point: entryPoint });
   }, 30000);
   var t60 = setTimeout(function () {
-    if (document.visibilityState === 'visible') track('cv_60s', { entry_point: entryPoint });
+    if (document.visibilityState === 'visible') {
+      track('cv_60s', { entry_point: entryPoint });
+      var nudge = document.getElementById('cv-nudge');
+      if (nudge) nudge.hidden = false;
+    }
   }, 60000);
   function clearCvTimers() { clearTimeout(t30); clearTimeout(t60); }
   document.addEventListener('visibilitychange', function () {
