@@ -293,7 +293,8 @@ document.addEventListener('DOMContentLoaded', function () {
   var contactBindings = [
     ['#cta-linkedin', 'linkedin_clicked', { source: 'main_site' }, 'linkedin'],
     ['#cta-email', 'email_clicked', {}, 'email'],
-    ['#cta-schedule', 'calendly_clicked', {}, 'contact']
+    ['#cta-schedule', 'calendly_clicked', {}, 'contact'],
+    ['#cta-schedule-form', 'calendly_clicked', { source: 'contact_form_alt' }, 'contact']
   ];
   contactBindings.forEach(function (b) {
     var el = document.querySelector(b[0]);
