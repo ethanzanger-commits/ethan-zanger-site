@@ -251,6 +251,9 @@ img{max-width:100%; display:block;}
 .contact-form input::placeholder, .contact-form textarea::placeholder{color:var(--body);}
 .contact-form button{margin-top:16px; align-self:flex-start;}
 #form-status{font-size:0.88rem; color:var(--performance); margin-top:10px;}
+.form-alt{font-size:0.85rem; color:var(--body); margin:12px 0 0;}
+.form-alt a{color:var(--cta); text-decoration:none; border-bottom:1px solid transparent;}
+.form-alt a:hover{color:var(--cta-hover); border-color:var(--cta-hover);}
 .privacy-note{font-size:0.78rem; color:var(--body); margin-top:6px;}
 @media (max-width:820px){.contact-grid{grid-template-columns:1fr;}}
 
@@ -258,6 +261,7 @@ img{max-width:100%; display:block;}
 .site-footer{
   border-top:1px solid var(--border); padding:28px 0; font-size:0.85rem; color:var(--body); background:var(--bg);
 }
+.footer-updated{color:var(--body); opacity:0.7;}
 
 /* CV viewer page */
 .cv-viewer-section{padding-top:56px;}
