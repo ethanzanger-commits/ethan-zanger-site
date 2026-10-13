@@ -5,7 +5,7 @@ try {
   !function (t, e) {
     var o, n, p, r;
     e.__SV || (window.posthog = e, e._i = [], e.init = function (i, s, a) {
-      function g(t, e) { var o = e.split("."); 2 == o.length && (t = t[o[0]], e = o[1]), t[e] = function () { t.uploadQueue.push([e].concat(Array.prototype.slice.call(arguments, 0))) } }
+      function g(t, e) { var o = e.split("."); 2 == o.length && (t = t[o[0]], e = o[1]), t[e] = function () { t.push([e].concat(Array.prototype.slice.call(arguments, 0))) } }
       (p = t.createElement("script")).type = "text/javascript", p.crossOrigin = "anonymous", p.async = !0,
         p.src = s.api_host.replace(".i.posthog.com", "-assets.i.posthog.com") + "/static/array.js",
         (r = t.getElementsByTagName("script")[0]).parentNode.insertBefore(p, r);
@@ -92,7 +92,7 @@ var lastTouchReferrer = document.referrer || '(direct)';
    single event instead of every CV click individually.
    ============================================================ */
 var SCORE_KEY = 'ez_intent_score_v1';
-var HIGH_INTENT_THRESHOLD = 20;
+var HIGH_INTENT_THRESHOLD = 35;
 var intentScore = 0;
 var highIntentFired = false;
 (function () {
@@ -165,6 +165,9 @@ function track(name, props) {
           first_touch_utm_campaign: firstTouch.utm_campaign,
           first_touch_utm_content: firstTouch.utm_content,
           first_touch_utm_term: firstTouch.utm_term,
+          traffic_source: firstTouch.utm_source || (function () {
+            try { var r = firstTouch.referrer; if (!r || r === '(direct)') return 'direct'; return new URL(r).hostname.replace(/^www\./, ''); } catch (e) { return 'direct'; }
+          })(),
           first_touch_referrer: firstTouch.referrer,
           first_touch_landing_page: firstTouch.landing_page,
           last_touch_utm_source: lastTouch.utm_source,
@@ -207,7 +210,7 @@ function markEngagedSession(reason) {
   var last = Date.now();
   var tick = setInterval(function () {
     var now = Date.now();
-    if (document.visibilityState === 'visible' && document.hasFocus()) {
+    if (document.visibilityState === 'visible') {
       visibleMs += now - last;
     }
     last = now;
@@ -370,7 +373,7 @@ document.addEventListener('DOMContentLoaded', function () {
     Object.keys(caseState).forEach(function (id) {
       var s = caseState[id];
       if (s.dwellSince && !s.engaged) {
-        if (document.visibilityState === 'visible' && document.hasFocus()) {
+        if (document.visibilityState === 'visible') {
           s.dwellMs += Date.now() - s.dwellSince;
         }
         s.dwellSince = Date.now();
