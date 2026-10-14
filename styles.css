@@ -282,6 +282,45 @@ img{max-width:100%; display:block;}
   .cv-frame-wrap iframe{height:60vh;}
 }
 
+/* Focus areas */
+.focus-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+.focus-card{background:var(--card); border:1px solid var(--border); padding:26px;}
+.focus-card h3{font-size:1.15rem; margin-bottom:6px;}
+.focus-lead{font-size:0.9rem; color:var(--signature); margin:0 0 16px;}
+.focus-card li{position:relative; padding-left:16px; margin-bottom:10px; font-size:0.93rem; color:var(--body);}
+.focus-card li::before{content:"–"; position:absolute; left:0; color:var(--body);}
+.focus-card li strong{color:var(--performance);}
+@media (max-width:900px){.focus-grid{grid-template-columns:1fr;}}
+
+/* High-intent follow-up slide-in */
+.followup{
+  position:fixed; right:20px; bottom:20px; z-index:60;
+  width:min(330px, calc(100vw - 40px));
+  background:var(--card); border:1px solid var(--border); border-radius:2px;
+  padding:18px 18px 14px; box-shadow:0 8px 30px rgba(0,0,0,0.35);
+  opacity:0; transform:translateY(16px);
+  transition:opacity 0.35s ease, transform 0.35s ease;
+}
+.followup.is-visible{opacity:1; transform:none;}
+.followup-close{
+  position:absolute; top:6px; right:10px; background:none; border:0; color:var(--body);
+  font-size:1.4rem; line-height:1; cursor:pointer; padding:4px;
+}
+.followup-close:hover{color:var(--headline);}
+.followup-title{font-family:var(--serif); color:var(--headline); font-size:1.05rem; margin:0 24px 6px 0;}
+.followup-body{font-size:0.88rem; color:var(--body); margin:0 0 12px;}
+.followup-form{display:flex; gap:8px;}
+.followup-form input[type="email"]{
+  flex:1; min-width:0; font-family:var(--sans); font-size:0.9rem; padding:9px 10px;
+  border:1px solid var(--border); background:var(--bg); color:var(--headline);
+}
+.followup-form .btn{padding:9px 16px; font-size:0.88rem;}
+.followup-hp{position:absolute; left:-9999px; width:1px; height:1px; opacity:0;}
+.followup-status{font-size:0.82rem; color:var(--performance); margin:8px 0 0; min-height:1em;}
+.followup-status a{color:var(--cta);}
+@media (max-width:720px){.followup{right:12px; bottom:12px; width:calc(100vw - 24px);}}
+@media (prefers-reduced-motion: reduce){.followup{transition:none;}}
+
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto;}
 }
