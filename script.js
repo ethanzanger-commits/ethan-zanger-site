@@ -113,7 +113,8 @@ var INTENT_WEIGHTS = {
   contact_viewed: 3,
   contact_form_started: 6,
   contact_form_submitted: 15,
-  linkedin_clicked: 2
+  linkedin_clicked: 2,
+  follow_up_requested: 15
 };
 
 function addIntentScore(eventName) {
@@ -130,8 +131,127 @@ function addIntentScore(eventName) {
   } catch (e) {}
   if (!highIntentFired && intentScore >= HIGH_INTENT_THRESHOLD) {
     highIntentFired = true;
-    track('high_intent_reached', { score: intentScore });
+    /* Persisted so a returning high-score visitor doesn't re-fire the
+       event (and re-ping Slack) on every page load. */
+    if (!storedFlag('ez_high_intent_fired_v1')) {
+      setFlag('ez_high_intent_fired_v1', '1');
+      track('high_intent_reached', { score: intentScore });
+    }
   }
+  maybeShowFollowUpPrompt();
+}
+
+/* ============================================================
+   HIGH-INTENT FOLLOW-UP PROMPT — a small, dismissible slide-in
+   (not a modal) offered once to a visitor whose score crossed
+   the threshold. Voluntary email only: it is an offer, never a
+   gate. Shown at most once per browser (dismissed, submitted,
+   or already identified via the contact form = never again).
+   Delivery: Formspree when an endpoint is known (read from the
+   contact form on the homepage and remembered for other pages),
+   otherwise PostHog only. Submitting identifies the visitor in
+   PostHog, linking their prior browsing to the email they chose
+   to give.
+   ============================================================ */
+var PROMPT_KEY = 'ez_followup_prompt_v1';
+var IDENTIFIED_KEY = 'ez_identified_v1';
+var ENDPOINT_KEY = 'ez_form_endpoint_v1';
+var promptScheduled = false;
+
+function storedFlag(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function setFlag(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+function followUpEndpoint() {
+  var f = document.getElementById('contact-form');
+  if (f && f.action && f.action.indexOf('INSERT') === -1) { setFlag(ENDPOINT_KEY, f.action); return f.action; }
+  var saved = storedFlag(ENDPOINT_KEY);
+  return (saved && saved.indexOf('INSERT') === -1) ? saved : null;
+}
+
+function maybeShowFollowUpPrompt() {
+  if (promptScheduled) return;
+  if (intentScore < HIGH_INTENT_THRESHOLD) return;
+  if (storedFlag(PROMPT_KEY) || storedFlag(IDENTIFIED_KEY)) return;
+  promptScheduled = true;
+  var go = function () {
+    if (document.body && document.body.hasAttribute('data-no-prompt')) return;
+    setTimeout(showFollowUpPrompt, 4000);
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+}
+
+function showFollowUpPrompt() {
+  if (document.getElementById('followup') || storedFlag(PROMPT_KEY)) return;
+  var box = document.createElement('aside');
+  box.id = 'followup';
+  box.className = 'followup';
+  box.setAttribute('role', 'region');
+  box.setAttribute('aria-label', 'Request a follow-up');
+  box.innerHTML =
+    '<button type="button" class="followup-close" aria-label="Dismiss">&times;</button>' +
+    '<p class="followup-title">Want me to follow up?</p>' +
+    '<p class="followup-body">Leave your email and I\u2019ll reach out personally. No newsletters, no list.</p>' +
+    '<form class="followup-form" novalidate>' +
+      '<input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" class="followup-hp">' +
+      '<input type="email" name="email" aria-label="Email address" placeholder="you@company.com" required autocomplete="email">' +
+      '<button type="submit" class="btn btn-primary">Send</button>' +
+    '</form>' +
+    '<p class="followup-status" role="status" aria-live="polite"></p>';
+  document.body.appendChild(box);
+  requestAnimationFrame(function () { box.classList.add('is-visible'); });
+  track('follow_up_prompt_shown', { score: intentScore });
+
+  function close(reason) {
+    setFlag(PROMPT_KEY, reason);
+    box.classList.remove('is-visible');
+    setTimeout(function () { if (box.parentNode) box.parentNode.removeChild(box); }, 400);
+    document.removeEventListener('keydown', onKey);
+  }
+  function onKey(e) { if (e.key === 'Escape') { track('follow_up_prompt_dismissed', { via: 'escape' }); close('dismissed'); } }
+  document.addEventListener('keydown', onKey);
+
+  box.querySelector('.followup-close').addEventListener('click', function () {
+    track('follow_up_prompt_dismissed', { via: 'close_button' });
+    close('dismissed');
+  });
+
+  var form = box.querySelector('form');
+  var status = box.querySelector('.followup-status');
+  var sending = false;
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (sending) return;
+    var emailInput = form.querySelector('input[type="email"]');
+    if (!emailInput.value || !emailInput.checkValidity()) { status.textContent = 'Please enter a valid email.'; return; }
+    sending = true;
+    form.querySelector('button').disabled = true;
+    status.textContent = 'Sending\u2026';
+    var email = emailInput.value.trim();
+    var endpoint = followUpEndpoint();
+
+    function done(delivery) {
+      status.textContent = 'Thanks \u2014 I\u2019ll be in touch.';
+      setFlag(IDENTIFIED_KEY, '1');
+      try { if (window.posthog && typeof posthog.identify === 'function') posthog.identify(email, { email: email }); } catch (err) {}
+      track('follow_up_requested', { score: intentScore, delivery: delivery });
+      setTimeout(function () { close('submitted'); }, 3500);
+    }
+    function fail() {
+      sending = false;
+      form.querySelector('button').disabled = false;
+      status.innerHTML = 'Couldn\u2019t send that. Email me at <a href="mailto:EthanZanger@gmail.com">EthanZanger@gmail.com</a>.';
+    }
+
+    if (!endpoint) { done('posthog_only'); return; }
+    var data = new FormData(form);
+    data.append('source', 'high_intent_prompt');
+    data.append('intent_score', String(intentScore));
+    data.append('traffic_source', firstTouch.utm_source || '');
+    data.append('first_touch_utm_campaign', firstTouch.utm_campaign || '');
+    fetch(endpoint, { method: 'POST', body: data, headers: { 'Accept': 'application/json' } })
+      .then(function (res) { if (res.ok) done('formspree'); else fail(); })
+      .catch(fail);
+  });
 }
 /* Returning visitor gets its one-time bonus immediately, since
    it's known at page load rather than from a later event. */
@@ -232,6 +352,7 @@ track('landing_page_view', {
 });
 
 document.addEventListener('DOMContentLoaded', function () {
+  followUpEndpoint();
 
   /* ----------------------------------------------------------
      Mobile nav toggle — unchanged behavior.
@@ -317,6 +438,7 @@ document.addEventListener('DOMContentLoaded', function () {
      ---------------------------------------------------------- */
   var seenSections = {};
   var sectionMap = {
+    focus: 'focus_section_viewed',
     experience: 'experience_section_viewed',
     capabilities: 'capabilities_section_viewed',
     about: 'about_section_viewed',
@@ -335,6 +457,38 @@ document.addEventListener('DOMContentLoaded', function () {
     var el = document.getElementById(id);
     if (el) sectionObserver.observe(el);
   });
+
+
+  /* ----------------------------------------------------------
+     Focus-area cards (customer acquisition / social / campaign
+     management). Same principle as the case studies: visibility
+     alone isn't engagement, so a card only counts after 5
+     cumulative seconds with half of it on screen. The three cards
+     sit side by side on desktop, so a plain "visible" event would
+     fire for all of them at once.
+     ---------------------------------------------------------- */
+  var focusState = {};
+  document.querySelectorAll('[data-focus]').forEach(function (el) {
+    focusState[el.getAttribute('data-focus')] = { ms: 0, since: null, fired: false };
+  });
+  setInterval(function () {
+    Object.keys(focusState).forEach(function (id) {
+      var st = focusState[id];
+      if (st.since && !st.fired && document.visibilityState === 'visible') {
+        st.ms += Date.now() - st.since;
+        st.since = Date.now();
+        if (st.ms >= 5000) { st.fired = true; track('focus_area_engaged_5s', { focus_area: id }); }
+      } else if (st.since) { st.since = Date.now(); }
+    });
+  }, 1000);
+  var focusObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      var st = focusState[entry.target.getAttribute('data-focus')];
+      if (!st) return;
+      st.since = entry.intersectionRatio >= 0.5 ? (st.since || Date.now()) : null;
+    });
+  }, { threshold: [0, 0.5] });
+  document.querySelectorAll('[data-focus]').forEach(function (el) { focusObserver.observe(el); });
 
   /* ----------------------------------------------------------
      CASE STUDY ENGAGEMENT — the actual fix for the
@@ -469,6 +623,7 @@ document.addEventListener('DOMContentLoaded', function () {
               posthog.identify(emailVal, { name: nameVal, company: companyVal, email: emailVal });
             }
           } catch (idErr) {}
+          setFlag(IDENTIFIED_KEY, '1');
           track('contact_form_submitted', {});
           track('qualified_contact', {});
           markEngagedSession('contact_form_submitted');
